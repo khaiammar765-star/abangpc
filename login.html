@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Staff Login</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+<body class="auth-page">
+
+  <div class="auth-bg">
+    <div class="auth-glow"></div>
+    <canvas id="loginParticles"></canvas>
+  </div>
+
+  <div class="auth-container">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <img src="logo.jpeg" alt="AbangPC" class="auth-logo-img" />
+      <div class="auth-logo-text">
+        <span class="auth-brand">AbangPC</span>
+        <span class="auth-subtitle">Management System</span>
+      </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="auth-card">
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-desc">Sign in to access your dashboard</p>
+
+      <div id="loginError" class="alert alert-error hidden"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input
+              type="email"
+              id="email"
+              placeholder="your@email.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <span class="field-err" id="emailErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="toggle-pw" id="togglePw">👁️</button>
+          </div>
+          <span class="field-err" id="passwordErr"></span>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          <span id="loginBtnText">Sign In</span>
+          <span id="loginSpinner" class="spinner hidden"></span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <a href="index.html" class="back-link">← Back to Website</a>
+      </div>
+    </div>
+
+    <!-- Version -->
+    <p class="auth-version">AbangPC System v1.0 &nbsp;|&nbsp; Nilai, Negeri Sembilan</p>
+  </div>
+
+  <script src="system.js"></script>
+  <script>
+    // Init login page
+    if (typeof SystemApp !== 'undefined') {
+      SystemApp.initLogin();
+    }
+  </script>
+</body>
+</html>

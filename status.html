@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Check Repair Status</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <meta name="description" content="Check your repair status at AbangPC. Enter your ticket number to see the latest update on your device." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="status-page">
+
+  <!-- Background -->
+  <div class="auth-bg">
+    <div class="auth-glow"></div>
+    <canvas id="statusParticles"></canvas>
+  </div>
+
+  <div class="status-container">
+
+    <!-- Logo -->
+    <div class="status-logo">
+      <img src="logo.jpeg" alt="AbangPC" />
+      <div>
+        <div class="status-logo-text">Abang<span>PC</span></div>
+        <div style="font-size:12px;color:var(--muted);">Nilai, Negeri Sembilan</div>
+      </div>
+    </div>
+
+    <!-- Search Card -->
+    <div class="status-card">
+      <h1 class="status-title">🔍 Track Your Repair</h1>
+      <p class="status-desc">Enter your ticket number to check the latest status of your device.</p>
+
+      <form id="statusForm" novalidate>
+        <div class="field-group">
+          <label>Ticket Number</label>
+          <div class="input-wrap">
+            <span class="input-icon">🎫</span>
+            <input
+              type="text"
+              id="ticketInput"
+              placeholder="e.g. ABG-X7K9M"
+              autocomplete="off"
+              maxlength="20"
+              style="text-transform:uppercase;letter-spacing:1px;"
+            />
+          </div>
+        </div>
+        <button type="submit" class="btn-login" id="checkBtn">
+          <span id="checkBtnText">Check Status</span>
+          <span id="checkSpinner" class="spinner hidden"></span>
+        </button>
+      </form>
+
+      <!-- Error -->
+      <div id="statusError" class="alert alert-error hidden" style="margin-top:16px;"></div>
+
+      <!-- Result -->
+      <div id="statusResult" class="status-result hidden"></div>
+
+    </div>
+
+    <!-- Help text -->
+    <div style="text-align:center;margin-top:20px;">
+      <p style="font-size:13px;color:var(--muted);">
+        Ticket number was given to you when you dropped off your device.<br>
+        Need help? 
+        <a href="https://wa.me/60197707324" style="color:var(--yellow);font-weight:600;">WhatsApp us: 019-770 7324</a>
+      </p>
+    </div>
+
+    <!-- Nav links -->
+    <div style="display:flex;gap:20px;justify-content:center;margin-top:24px;">
+      <a href="index.html" class="back-link">🌐 Main Website</a>
+      <a href="login.html" class="back-link">🔐 Staff Login</a>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="system.js"></script>
+  <script src="status.js"></script>
+</body>
+</html>

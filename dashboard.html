@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Manager Dashboard</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+</head>
+<body>
+
+<div class="system-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn-menu" id="menuBtn">☰</button>
+        <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" id="exportBtn">📊 Export Excel</button>
+        <button class="btn btn-primary btn-sm" id="newTicketBtn">➕ New Ticket</button>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+          <div class="stat-label">Total Tickets</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Diagnosing</div>
+          <div class="stat-value" id="statDiagnosing" style="color:var(--info)">—</div>
+          <div class="stat-sub">Waiting assessment</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Repairing</div>
+          <div class="stat-value" id="statRepairing" style="color:var(--warning)">—</div>
+          <div class="stat-sub">In progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ready Pickup</div>
+          <div class="stat-value" id="statReady" style="color:var(--success)">—</div>
+          <div class="stat-sub">Waiting collection</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Collected</div>
+          <div class="stat-value" id="statCollected" style="color:var(--muted)">—</div>
+          <div class="stat-sub">Completed</div>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="filters-row">
+          <div class="input-wrap" style="flex:1;max-width:300px;">
+            <span class="input-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search ticket, customer, device..." />
+          </div>
+          <select id="statusFilter" style="background:var(--card);border:1px solid var(--border-hover);color:var(--white);padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;outline:none;">
+            <option value="">All Statuses</option>
+            <option value="diagnosing">🔍 Diagnosing</option>
+            <option value="repairing">🔧 Repairing</option>
+            <option value="finished">✅ Finished</option>
+            <option value="ready_pickup">📦 Ready for Pickup</option>
+            <option value="collected">🏠 Collected</option>
+          </select>
+          <select id="ageFilter" style="background:var(--card);border:1px solid var(--border-hover);color:var(--white);padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;outline:none;">
+            <option value="">All Ages</option>
+            <option value="new">🟢 New</option>
+            <option value="warning">🟡 Due</option>
+            <option value="overdue">🔴 Overdue</option>
+            <option value="closed">🟤 Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TICKETS TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎫 All Tickets</span>
+          <span id="ticketCount" style="font-size:13px;color:var(--muted);">Loading...</span>
+        </div>
+        <div class="table-wrap">
+          <table id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Ticket #</th>
+                <th>Customer</th>
+                <th>Device</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Loading tickets...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREATE TICKET MODAL ===== -->
+<div class="modal-overlay hidden" id="createModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">➕ Create New Ticket</span>
+      <button class="modal-close" id="closeCreateModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="createError" class="alert alert-error hidden"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Customer Phone (search existing or create new)</label>
+          <div class="input-wrap">
+            <span class="input-icon">📞</span>
+            <input type="tel" id="custPhone" placeholder="01X-XXX XXXX" />
+          </div>
+          <div id="custFound" class="hidden" style="margin-top:8px;padding:10px 14px;background:var(--success-dim);border:1px solid rgba(74,222,128,0.25);border-radius:8px;font-size:13px;color:var(--success);"></div>
+        </div>
+
+        <div class="field-group">
+          <label>Customer Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="custName" placeholder="Full name" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Customer Email (optional)</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="custEmail" placeholder="email@example.com" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Device Type</label>
+          <div class="input-wrap">
+            <span class="input-icon">💻</span>
+            <select id="deviceType">
+              <option value="laptop">Laptop</option>
+              <option value="desktop">Desktop</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Device Brand</label>
+          <div class="input-wrap">
+            <span class="input-icon">🏷️</span>
+            <input type="text" id="deviceBrand" placeholder="e.g. Dell, HP, Asus" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Device Model (optional)</label>
+          <div class="input-wrap">
+            <span class="input-icon">📱</span>
+            <input type="text" id="deviceModel" placeholder="e.g. Inspiron 15" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Issue Description</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔧</span>
+            <textarea id="issueDesc" placeholder="Describe the problem the customer reported..."></textarea>
+          </div>
+        </div>
+
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Estimated Completion</label>
+          <div class="input-wrap no-icon">
+            <input type="date" id="estCompletion" />
+          </div>
+        </div>
+
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Internal Notes (staff only, customer won't see)</label>
+          <div class="input-wrap">
+            <span class="input-icon">📝</span>
+            <textarea id="internalNotes" placeholder="Any internal notes for the technician..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelCreateBtn">Cancel</button>
+      <button class="btn btn-primary" id="submitCreateBtn">
+        <span id="createBtnText">Create Ticket</span>
+        <span id="createSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TICKET DETAIL MODAL ===== -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <span class="modal-title" id="detailModalTitle">Ticket Details</span>
+      <button class="modal-close" id="closeDetailModal">✕</button>
+    </div>
+    <div class="modal-body" id="detailModalBody">
+      Loading...
+    </div>
+    <div class="modal-footer" id="detailModalFooter"></div>
+  </div>
+</div>
+
+<!-- ===== UPDATE STATUS MODAL ===== -->
+<div class="modal-overlay hidden" id="statusModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <span class="modal-title">🔄 Update Status</span>
+      <button class="modal-close" id="closeStatusModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>New Status</label>
+        <div class="input-wrap">
+          <span class="input-icon">📊</span>
+          <select id="newStatusSelect">
+            <option value="diagnosing">🔍 Diagnosing</option>
+            <option value="repairing">🔧 Repairing</option>
+            <option value="finished">✅ Finished</option>
+            <option value="ready_pickup">📦 Ready for Pickup</option>
+            <option value="collected">🏠 Collected</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Notes (optional)</label>
+        <div class="input-wrap">
+          <span class="input-icon">📝</span>
+          <textarea id="statusNotes" placeholder="Add a note about this status change..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelStatusBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmStatusBtn">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== UPLOAD PHOTO MODAL ===== -->
+<div class="modal-overlay hidden" id="photoModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <span class="modal-title">📸 Upload Photo</span>
+      <button class="modal-close" id="closePhotoModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Select Photo</label>
+        <input type="file" id="photoFile" accept="image/*" style="width:100%;background:var(--surface);border:1px solid var(--border-hover);color:var(--white);border-radius:10px;padding:10px 14px;font-size:14px;font-family:inherit;" />
+      </div>
+      <div class="field-group">
+        <label>Caption (optional)</label>
+        <div class="input-wrap">
+          <span class="input-icon">📝</span>
+          <input type="text" id="photoCaption" placeholder="e.g. Before repair - cracked screen" />
+        </div>
+      </div>
+      <div id="photoPreview" class="hidden" style="margin-top:12px;border-radius:10px;overflow:hidden;max-height:200px;">
+        <img id="photoPreviewImg" src="" alt="Preview" style="width:100%;object-fit:cover;" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelPhotoBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmPhotoBtn">
+        <span id="photoUploadText">Upload Photo</span>
+        <span id="photoSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIAGNOSE REPORT MODAL ===== -->
+<div class="modal-overlay hidden" id="diagnoseModal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-header">
+      <span class="modal-title">📄 Borang Diagnos</span>
+      <button class="modal-close" id="closeDiagnoseModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="diagnoseError" class="alert alert-error hidden"></div>
+
+      <!-- Header Info -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div class="field-group">
+          <label>Nama Pelanggan</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="diag_customer_name" placeholder="Nama pelanggan" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Tarikh</label>
+          <div class="input-wrap no-icon">
+            <input type="date" id="diag_date" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Components Table -->
+      <div style="overflow-x:auto;">
+        <table class="diag-table">
+          <thead>
+            <tr>
+              <th style="width:80px;">ITEM</th>
+              <th>SPESIFIKASI</th>
+              <th style="width:90px;">SUHU (°C)</th>
+              <th style="width:110px;">CONDITION</th>
+              <th>REMARK</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- CPU -->
+            <tr>
+              <td class="diag-item-label">CPU</td>
+              <td><input type="text" class="diag-input" id="diag_cpu_spec" placeholder="e.g. Intel Core i5 12400" /></td>
+              <td><input type="text" class="diag-input" id="diag_cpu_temp" placeholder="e.g. 44/61" /></td>
+              <td>
+                <select class="diag-select" id="diag_cpu_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_cpu_remark" placeholder="Catatan..." /></td>
+            </tr>
+            <!-- MOBO -->
+            <tr>
+              <td class="diag-item-label">MOBO</td>
+              <td><input type="text" class="diag-input" id="diag_mobo_spec" placeholder="e.g. MSI B760M Bomber" /></td>
+              <td><input type="text" class="diag-input" id="diag_mobo_temp" placeholder="e.g. 36/45" /></td>
+              <td>
+                <select class="diag-select" id="diag_mobo_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_mobo_remark" placeholder="Catatan..." /></td>
+            </tr>
+            <!-- RAM -->
+            <tr>
+              <td class="diag-item-label">RAM</td>
+              <td><input type="text" class="diag-input" id="diag_ram_spec" placeholder="e.g. 8GB DDR4 @ 3200MHz" /></td>
+              <td><input type="text" class="diag-input" id="diag_ram_temp" placeholder="e.g. 35" /></td>
+              <td>
+                <select class="diag-select" id="diag_ram_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_ram_remark" placeholder="Catatan..." /></td>
+            </tr>
+            <!-- SSD -->
+            <tr>
+              <td class="diag-item-label">SSD</td>
+              <td><input type="text" class="diag-input" id="diag_ssd_spec" placeholder="e.g. Kingston 250GB" /></td>
+              <td><input type="text" class="diag-input" id="diag_ssd_temp" placeholder="e.g. 44" /></td>
+              <td>
+                <select class="diag-select" id="diag_ssd_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_ssd_remark" placeholder="Catatan..." /></td>
+            </tr>
+            <!-- GPU -->
+            <tr>
+              <td class="diag-item-label">GPU</td>
+              <td><input type="text" class="diag-input" id="diag_gpu_spec" placeholder="e.g. NVIDIA GeForce 1650" /></td>
+              <td><input type="text" class="diag-input" id="diag_gpu_temp" placeholder="e.g. 33/66" /></td>
+              <td>
+                <select class="diag-select" id="diag_gpu_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_gpu_remark" placeholder="FPS: / MIN: / MAX:" /></td>
+            </tr>
+            <!-- PSU -->
+            <tr>
+              <td class="diag-item-label">PSU</td>
+              <td><input type="text" class="diag-input" id="diag_psu_spec" placeholder="e.g. Gigabyte P450B" /></td>
+              <td><input type="text" class="diag-input" id="diag_psu_temp" placeholder="—" /></td>
+              <td>
+                <select class="diag-select" id="diag_psu_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td><input type="text" class="diag-input" id="diag_psu_remark" placeholder="e.g. 80+ Bronze" /></td>
+            </tr>
+            <!-- CASING -->
+            <tr>
+              <td class="diag-item-label">CASING</td>
+              <td><input type="text" class="diag-input" id="diag_casing_spec" placeholder="e.g. Invasion" /></td>
+              <td><input type="text" class="diag-input" id="diag_casing_temp" placeholder="—" /></td>
+              <td>
+                <select class="diag-select" id="diag_casing_condition">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="LEMAH">LEMAH</option>
+                  <option value="PERLU TUKAR">PERLU TUKAR</option>
+                </select>
+              </td>
+              <td>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                    <span style="color:var(--muted);min-width:100px;">POWER BUTTON:</span>
+                    <select class="diag-select" id="diag_casing_power" style="flex:1;">
+                      <option value="">—</option>
+                      <option value="OK">OK</option>
+                      <option value="ROSAK">ROSAK</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                    <span style="color:var(--muted);min-width:100px;">RESET BUTTON:</span>
+                    <select class="diag-select" id="diag_casing_reset" style="flex:1;">
+                      <option value="">—</option>
+                      <option value="OK">OK</option>
+                      <option value="ROSAK">ROSAK</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                    <span style="color:var(--muted);min-width:100px;">USB PORT:</span>
+                    <select class="diag-select" id="diag_casing_usb" style="flex:1;">
+                      <option value="">—</option>
+                      <option value="OK">OK</option>
+                      <option value="ROSAK">ROSAK</option>
+                    </select>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;">
+        <div class="field-group">
+          <label>Done By</label>
+          <div class="input-wrap">
+            <span class="input-icon">👨‍🔧</span>
+            <input type="text" id="diag_done_by" placeholder="Nama teknisyen" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Additional Notes</label>
+          <div class="input-wrap">
+            <span class="input-icon">📝</span>
+            <input type="text" id="diag_notes" placeholder="Sebarang catatan tambahan..." />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelDiagnoseBtn">Cancel</button>
+      <button class="btn btn-secondary" id="previewDiagnoseBtn">👁️ Preview PDF</button>
+      <button class="btn btn-primary" id="saveDiagnoseBtn">
+        <span id="diagnoseBtnText">💾 Save & Generate PDF</span>
+        <span id="diagnoseSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LAPTOP DIAGNOSE MODAL ===== -->
+<div class="modal-overlay hidden" id="laptopDiagnoseModal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-header">
+      <span class="modal-title">💻 Borang Diagnose Laptop</span>
+      <button class="modal-close" id="closeLaptopDiagnoseModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="laptopDiagnoseError" class="alert alert-error hidden"></div>
+
+      <!-- Header -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div class="field-group">
+          <label>Nama Pelanggan</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="ldiag_customer_name" placeholder="Nama pelanggan" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Model Laptop</label>
+          <div class="input-wrap">
+            <span class="input-icon">💻</span>
+            <input type="text" id="ldiag_laptop_model" placeholder="e.g. HP Pavilion 15-CK0xx" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table class="diag-table">
+          <thead>
+            <tr>
+              <th style="width:110px;">ITEM</th>
+              <th style="width:90px;">SUHU (°C)</th>
+              <th>REMARK</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- CPU -->
+            <tr>
+              <td class="diag-item-label">CPU</td>
+              <td><input type="text" class="diag-input" id="ldiag_cpu_temp" placeholder="e.g. 51/75" /></td>
+              <td><input type="text" class="diag-input" id="ldiag_cpu_remark" placeholder="e.g. Intel Core i5 8250U 1.6GHz" /></td>
+            </tr>
+            <!-- MOBO -->
+            <tr>
+              <td class="diag-item-label">MOBO</td>
+              <td><input type="text" class="diag-input" id="ldiag_mobo_temp" placeholder="—" /></td>
+              <td><input type="text" class="diag-input" id="ldiag_mobo_remark" placeholder="e.g. HP 841C (U3E1)" /></td>
+            </tr>
+            <!-- RAM -->
+            <tr>
+              <td class="diag-item-label">RAM</td>
+              <td><input type="text" class="diag-input" id="ldiag_ram_temp" placeholder="—" /></td>
+              <td><input type="text" class="diag-input" id="ldiag_ram_remark" placeholder="e.g. 20GB Dual Channel DDR4 2400MHz" /></td>
+            </tr>
+            <!-- SSD -->
+            <tr>
+              <td class="diag-item-label">SSD</td>
+              <td><input type="text" class="diag-input" id="ldiag_ssd_temp" placeholder="e.g. 33" /></td>
+              <td><input type="text" class="diag-input" id="ldiag_ssd_remark" placeholder="e.g. Good 83% - Sata SSD 240GB" /></td>
+            </tr>
+            <!-- GPU Before -->
+            <tr>
+              <td class="diag-item-label">GPU (before)</td>
+              <td><input type="text" class="diag-input" id="ldiag_gpu_before_temp" placeholder="e.g. 52" /></td>
+              <td><input type="text" class="diag-input" id="ldiag_gpu_before_remark" placeholder="e.g. 2047MB NVIDIA GeForce MX150" /></td>
+            </tr>
+            <!-- GPU After -->
+            <tr>
+              <td class="diag-item-label">GPU (after)</td>
+              <td><input type="text" class="diag-input" id="ldiag_gpu_after_temp" placeholder="e.g. 73" /></td>
+              <td>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" class="diag-input" id="ldiag_gpu_fps" placeholder="FPS:" style="flex:1" />
+                  <input type="text" class="diag-input" id="ldiag_gpu_min_fps" placeholder="MIN FPS:" style="flex:1" />
+                  <input type="text" class="diag-input" id="ldiag_gpu_max_fps" placeholder="MAX FPS:" style="flex:1" />
+                </div>
+              </td>
+            </tr>
+            <!-- Keyboard -->
+            <tr>
+              <td class="diag-item-label">Keyboard</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_keyboard">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="PARTIAL">PARTIAL</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Touchpad -->
+            <tr>
+              <td class="diag-item-label">Touchpad</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_touchpad">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="PARTIAL">PARTIAL</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Battery Health -->
+            <tr>
+              <td class="diag-item-label">Battery Health</td>
+              <td><input type="text" class="diag-input" id="ldiag_battery_health" placeholder="e.g. 82%" /></td>
+              <td>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="text" class="diag-input" id="ldiag_battery_current" placeholder="Current mWh" style="flex:1" />
+                  <span style="color:var(--muted);">/</span>
+                  <input type="text" class="diag-input" id="ldiag_battery_design" placeholder="Design mWh" style="flex:1" />
+                </div>
+              </td>
+            </tr>
+            <!-- Speaker -->
+            <tr>
+              <td class="diag-item-label">Speaker</td>
+              <td>—</td>
+              <td>
+                <div style="display:flex;gap:12px;align-items:center;">
+                  <span style="color:var(--muted);font-size:12px;">Left:</span>
+                  <select class="diag-select" id="ldiag_speaker_left" style="flex:1;">
+                    <option value="">—</option>
+                    <option value="OK">OK</option>
+                    <option value="ROSAK">ROSAK</option>
+                  </select>
+                  <span style="color:var(--muted);font-size:12px;">Right:</span>
+                  <select class="diag-select" id="ldiag_speaker_right" style="flex:1;">
+                    <option value="">—</option>
+                    <option value="OK">OK</option>
+                    <option value="ROSAK">ROSAK</option>
+                  </select>
+                </div>
+              </td>
+            </tr>
+            <!-- WI-FI -->
+            <tr>
+              <td class="diag-item-label">WI-FI</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_wifi">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Port Laptop -->
+            <tr>
+              <td class="diag-item-label">Port Laptop</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_port">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="PARTIAL">PARTIAL</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Windows -->
+            <tr>
+              <td class="diag-item-label">Windows</td>
+              <td>—</td>
+              <td><input type="text" class="diag-input" id="ldiag_windows" placeholder="e.g. Win 11" /></td>
+            </tr>
+            <!-- Camera -->
+            <tr>
+              <td class="diag-item-label">Camera</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_camera">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="TIADA">TIADA</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Touchscreen -->
+            <tr>
+              <td class="diag-item-label">Touchscreen</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_touchscreen">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="ROSAK">ROSAK</option>
+                  <option value="TIADA">TIADA</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td class="diag-item-label">Body</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_body">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="CALAR">CALAR</option>
+                  <option value="PECAH">PECAH</option>
+                  <option value="ROSAK">ROSAK</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Hinges -->
+            <tr>
+              <td class="diag-item-label">Hinges</td>
+              <td>—</td>
+              <td>
+                <select class="diag-select" id="ldiag_hinges">
+                  <option value="">—</option>
+                  <option value="OK">OK</option>
+                  <option value="LONGGAR">LONGGAR</option>
+                  <option value="ROSAK">ROSAK</option>
+                </select>
+              </td>
+            </tr>
+            <!-- Adapter -->
+            <tr>
+              <td class="diag-item-label">Adapter</td>
+              <td>—</td>
+              <td><input type="text" class="diag-input" id="ldiag_adapter" placeholder="e.g. 65W Original" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px;">
+        <div class="field-group">
+          <label>Done By</label>
+          <div class="input-wrap">
+            <span class="input-icon">👨‍🔧</span>
+            <input type="text" id="ldiag_done_by" placeholder="Nama teknisyen" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Supplier</label>
+          <div class="input-wrap">
+            <span class="input-icon">🏪</span>
+            <input type="text" id="ldiag_supplier" placeholder="Supplier name" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Tarikh</label>
+          <div class="input-wrap no-icon">
+            <input type="date" id="ldiag_date" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelLaptopDiagnoseBtn">Cancel</button>
+      <button class="btn btn-secondary" id="previewLaptopDiagnoseBtn">👁️ Preview PDF</button>
+      <button class="btn btn-primary" id="saveLaptopDiagnoseBtn">
+        <span id="laptopDiagnoseBtnText">💾 Save & Generate PDF</span>
+        <span id="laptopDiagnoseSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay hidden" id="exportModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">📊 Export Tickets to Excel</span>
+      <button class="modal-close" id="closeExportModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Date Range</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="input-wrap no-icon">
+            <input type="date" id="exportDateFrom" />
+          </div>
+          <div class="input-wrap no-icon">
+            <input type="date" id="exportDateTo" />
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;">Leave empty to export all tickets</div>
+      </div>
+      <div class="field-group">
+        <label>Filter by Status</label>
+        <div class="input-wrap">
+          <span class="input-icon">📊</span>
+          <select id="exportStatus">
+            <option value="">All Statuses</option>
+            <option value="diagnosing">🔍 Diagnosing</option>
+            <option value="repairing">🔧 Repairing</option>
+            <option value="finished">✅ Finished</option>
+            <option value="ready_pickup">📦 Ready for Pickup</option>
+            <option value="collected">🏠 Collected</option>
+          </select>
+        </div>
+      </div>
+      <div id="exportPreview" style="margin-top:12px;padding:12px 14px;background:var(--surface);border-radius:10px;font-size:13px;color:var(--muted);text-align:center;">
+        Set filters above to preview export
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelExportBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmExportBtn">
+        <span id="exportBtnText">⬇️ Download Excel</span>
+        <span id="exportSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="system.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>
