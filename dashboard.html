@@ -300,6 +300,47 @@
   </div>
 </div>
 
+<!-- ===== EDIT DATE MODAL ===== -->
+<div class="modal-overlay hidden" id="editDateModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">📅 Edit Ticket Date</span>
+      <button class="modal-close" onclick="closeEditDateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">
+        Backdate this ticket to reflect when the device was actually received. Change will be logged in audit history.
+      </p>
+      <div class="field-group">
+        <label>Ticket Number</label>
+        <div class="input-wrap">
+          <span class="input-icon">🎫</span>
+          <input type="text" id="editDateTicketNumber" disabled style="opacity:0.6;" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Original Date</label>
+        <div class="input-wrap">
+          <span class="input-icon">📅</span>
+          <input type="text" id="editDateOriginal" disabled style="opacity:0.6;" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>New Date *</label>
+        <div class="input-wrap">
+          <span class="input-icon">🗓️</span>
+          <input type="datetime-local" id="editDateNew" required />
+        </div>
+      </div>
+      <input type="hidden" id="editDateTicketId" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEditDateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTicketDate()">💾 Save Date</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== DIAGNOSE REPORT MODAL ===== -->
 <div class="modal-overlay hidden" id="diagnoseModal">
   <div class="modal" style="max-width:780px;">
