@@ -205,6 +205,7 @@ function renderTickets(tickets) {
           <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${t.id}')">👁️ View</button>
           <button class="btn btn-secondary btn-sm" onclick="openStatusModal('${t.id}','${t.status}')">🔄</button>
           <button class="btn btn-secondary btn-sm" onclick="openPhotoModal('${t.id}')">📸</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditDateModal('${t.id}','${t.ticket_number}','${t.created_at}')" title="Edit Date">📅</button>
           <div class="diag-dropdown">
             <button class="btn btn-secondary btn-sm diag-dropdown-btn" onclick="toggleDiagMenu('${t.id}', event)">📄 ▾</button>
             <div class="diag-dropdown-menu hidden" id="diagMenu_${t.id}">
@@ -1640,6 +1641,50 @@ async function deleteTicket(ticketId, ticketNumber) {
     }
 }
 // =============================================
+// EDIT TICKET DATE
+// =============================================
+function openEditDateModal(ticketId, ticketNumber, currentDate) {
+    document.getElementById('editDateTicketId').value = ticketId;
+    document.getElementById('editDateTicketNumber').value = ticketNumber;
+    var date = new Date(currentDate);
+    var formatted = date.toLocaleString('en-MY', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('editDateOriginal').value = formatted;
+    // Pre-fill datetime-local with current value
+    var localISO = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        .toISOString().slice(0, 16);
+    document.getElementById('editDateNew').value = localISO;
+    document.getElementById('editDateModal').classList.remove('hidden');
+}
+function closeEditDateModal() {
+    document.getElementById('editDateModal').classList.add('hidden');
+}
+async function saveTicketDate() {
+    var ticketId = document.getElementById('editDateTicketId').value;
+    var newDate = document.getElementById('editDateNew').value;
+    if (!newDate) {
+        showToast('Please select a date', 'error');
+        return;
+    }
+    if (!confirm('Are you sure you want to change this ticket\'s creation date?\n\nThis will be logged in the audit history.'))
+        return;
+    try {
+        var isoDate = new Date(newDate).toISOString();
+        const { error } = await db.from('tickets')
+            .update({ created_at: isoDate })
+            .eq('id', ticketId);
+        if (error) throw error;
+        closeEditDateModal();
+        await loadTickets();
+        showToast('✅ Ticket date updated!', 'success');
+    }
+    catch (err) {
+        showToast(err.message || 'Failed to update date', 'error');
+    }
+}
+// =============================================
 // EXPOSE FUNCTIONS TO HTML (onclick handlers)
 // ==============================================
 window.openDetailModal = openDetailModal;
@@ -1651,6 +1696,9 @@ window.openLaptopDiagnoseModal = openLaptopDiagnoseModal;
 window.toggleDiagMenu = toggleDiagMenu;
 window.closeDiagMenus = closeDiagMenus;
 window.addComment = addComment;
+window.openEditDateModal = openEditDateModal;
+window.closeEditDateModal = closeEditDateModal;
+window.saveTicketDate = saveTicketDate;
 // =============================================
 // START
 // =============================================
