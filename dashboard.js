@@ -102,8 +102,33 @@ async function loadTickets() {
         return;
     }
     allTickets = data || [];
+    populateYearFilter();
     updateStats();
     renderTickets(allTickets);
+}
+// =============================================
+// POPULATE YEAR FILTER (dynamic based on existing tickets)
+// =============================================
+function populateYearFilter() {
+    const yearSelect = document.getElementById('yearFilter');
+    if (!yearSelect) return;
+    const currentValue = yearSelect.value;
+    // Collect unique years from tickets
+    const years = new Set();
+    allTickets.forEach(t => {
+        if (t.created_at) {
+            years.add(new Date(t.created_at).getFullYear());
+        }
+    });
+    // Always include current year
+    years.add(new Date().getFullYear());
+    // Sort descending (newest first)
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    // Build options
+    yearSelect.innerHTML = '<option value="">All Years</option>' +
+        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+    // Restore previous selection
+    yearSelect.value = currentValue;
 }
 // =============================================
 // UPDATE STATS
@@ -227,6 +252,8 @@ function applyFilters() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const status = document.getElementById('statusFilter').value;
     const age = document.getElementById('ageFilter').value;
+    const year = document.getElementById('yearFilter').value;
+    const month = document.getElementById('monthFilter').value;
     const filtered = allTickets.filter(t => {
         var _a, _b, _c, _d, _e, _f;
         const matchSearch = !search ||
@@ -237,7 +264,10 @@ function applyFilters() {
             ((_f = t.device_brand) === null || _f === void 0 ? void 0 : _f.toLowerCase().includes(search));
         const matchStatus = !status || t.status === status;
         const matchAge = !age || getTicketAge(t.estimated_completion, t.status).class === age;
-        return matchSearch && matchStatus && matchAge;
+        const ticketDate = new Date(t.created_at);
+        const matchYear = !year || ticketDate.getFullYear().toString() === year;
+        const matchMonth = !month || (ticketDate.getMonth() + 1).toString() === month;
+        return matchSearch && matchStatus && matchAge && matchYear && matchMonth;
     });
     renderTickets(filtered);
 }
@@ -719,6 +749,8 @@ function bindEvents() {
     (_z = document.getElementById('searchInput')) === null || _z === void 0 ? void 0 : _z.addEventListener('input', applyFilters);
     (_0 = document.getElementById('statusFilter')) === null || _0 === void 0 ? void 0 : _0.addEventListener('change', applyFilters);
     (_1 = document.getElementById('ageFilter')) === null || _1 === void 0 ? void 0 : _1.addEventListener('change', applyFilters);
+    document.getElementById('yearFilter')?.addEventListener('change', applyFilters);
+    document.getElementById('monthFilter')?.addEventListener('change', applyFilters);
     // Mobile menu
     (_2 = document.getElementById('menuBtn')) === null || _2 === void 0 ? void 0 : _2.addEventListener('click', () => {
         var _a;
