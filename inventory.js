@@ -120,10 +120,73 @@ function renderLaptops(rows) {
         ${r.notes ? `<div class="text-muted" style="font-size:12px;margin-top:6px;">${escapeHtml(r.notes)}</div>` : ''}
         <div class="ticket-card-footer">
           <span class="ticket-price">${fmtPrice(r.price)}</span>
-          <div class="ticket-card-actions"></div>
+          <div class="ticket-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editLaptop('${r.id}')">✏️</button>
+            ${r.status === 'in_stock'
+                ? `<button class="btn btn-primary btn-sm" onclick="markSold('${r.id}')">💰 Sold</button>`
+                : `<button class="btn btn-secondary btn-sm" onclick="unmarkSold('${r.id}')">↩️ Restock</button>`}
+            <button class="btn btn-danger btn-sm" onclick="deleteLaptop('${r.id}')">🗑️</button>
+          </div>
         </div>
       </div>`;
     }).join('');
+}
+
+async function editLaptop(id) {
+    const { data, error } = await db.from('inventory_laptops').select('*').eq('id', id).single();
+    if (error || !data) {
+        showToast('Failed to load laptop', 'error');
+        return;
+    }
+    document.getElementById('lapTitle').value = data.title || '';
+    document.getElementById('lapBrand').value = data.brand || '';
+    document.getElementById('lapModel').value = data.model || '';
+    document.getElementById('lapCpu').value = data.cpu || '';
+    document.getElementById('lapRam').value = data.ram || '';
+    document.getElementById('lapStorage').value = data.storage || '';
+    document.getElementById('lapCondition').value = data.condition || '';
+    document.getElementById('lapPrice').value = data.price ?? '';
+    document.getElementById('lapNotes').value = data.notes || '';
+    document.getElementById('lapPhoto').value = '';
+    openLaptopModal(id);
+}
+
+async function markSold(id) {
+    if (!confirm('Mark this laptop as sold?\n\nIt will move to the Sold list.'))
+        return;
+    const { error } = await db.from('inventory_laptops')
+        .update({ status: 'sold', sold_at: new Date().toISOString() })
+        .eq('id', id);
+    if (error) {
+        showToast('Failed to mark as sold', 'error');
+        return;
+    }
+    await loadLaptops();
+    showToast('💰 Marked as sold!', 'success');
+}
+
+async function unmarkSold(id) {
+    const { error } = await db.from('inventory_laptops')
+        .update({ status: 'in_stock', sold_at: null })
+        .eq('id', id);
+    if (error) {
+        showToast('Failed to restock', 'error');
+        return;
+    }
+    await loadLaptops();
+    showToast('↩️ Back in stock', 'success');
+}
+
+async function deleteLaptop(id) {
+    if (!confirm('Delete this laptop from inventory?\n\nThis cannot be undone.'))
+        return;
+    const { error } = await db.from('inventory_laptops').delete().eq('id', id);
+    if (error) {
+        showToast('Failed to delete laptop', 'error');
+        return;
+    }
+    await loadLaptops();
+    showToast('🗑️ Laptop deleted', 'success');
 }
 
 // Reuses the existing ticket-photos bucket with an inventory/ prefix, so no
@@ -374,6 +437,10 @@ async function saveItem() {
 window.adjustQty = adjustQty;
 window.editItem = editItem;
 window.deleteItem = deleteItem;
+window.editLaptop = editLaptop;
+window.markSold = markSold;
+window.unmarkSold = unmarkSold;
+window.deleteLaptop = deleteLaptop;
 
 // =============================================
 // START
