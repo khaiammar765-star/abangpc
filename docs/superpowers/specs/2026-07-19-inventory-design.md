@@ -34,7 +34,16 @@ Two tables, because the two kinds of stock have genuinely different shapes. A us
 
 ### `inventory_laptops`
 
-One row per physical laptop.
+One row per batch of identical laptops.
+
+> **Amended 2026-07-19, after implementation.** Originally one row per single
+> physical unit. The shop regularly holds several identical units of the same
+> model, so a row became a batch: `quantity` is how many remain, `sold_count`
+> is how many have sold. The Sold button sells one unit at a time rather than
+> retiring the whole row, and the tabs filter on these counts instead of
+> `status` — meaning a part-sold batch correctly appears under both In Stock
+> and Sold. `status` is still maintained in step with the counts so the
+> Supabase table remains readable.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -49,8 +58,10 @@ One row per physical laptop.
 | `notes` | text, nullable | scratches, missing charger, etc. |
 | `photo_url` | text, nullable | Supabase Storage public URL |
 | `price` | numeric, nullable | optional, never required |
-| `status` | text, not null | `in_stock` or `sold`, default `in_stock` |
-| `sold_at` | timestamptz, nullable | set when marked sold |
+| `quantity` | integer, not null | units remaining, default 1, must be >= 0 |
+| `sold_count` | integer, not null | units sold, default 0, must be >= 0 |
+| `status` | text, not null | `in_stock` or `sold`, default `in_stock`; derived from `quantity` |
+| `sold_at` | timestamptz, nullable | timestamp of the most recent sale |
 | `created_at` | timestamptz, not null | default `now()` |
 | `created_by` | uuid, nullable | FK to `users.id` |
 
