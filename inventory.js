@@ -27,7 +27,21 @@ function escapeHtml(s) {
         .replace(/'/g, '&#39;');
 }
 
-const CATEGORY_LABELS = { gpu: 'GPU', ram: 'RAM', ssd: 'SSD', other: 'Other' };
+// Keys must match the <option value=""> list in inventory.html. The category
+// column is free text, so adding one here needs no database change. Unknown
+// values still render, falling back to the raw string.
+const CATEGORY_LABELS = {
+    gpu: 'GPU',
+    ram: 'RAM',
+    ssd: 'SSD',
+    processor: 'Processor',
+    motherboard: 'Motherboard',
+    monitor: 'Monitor',
+    mouse: 'Mouse',
+    mousepad: 'Mousepad',
+    speaker: 'Speaker',
+    other: 'Other',
+};
 
 // =============================================
 // INIT
