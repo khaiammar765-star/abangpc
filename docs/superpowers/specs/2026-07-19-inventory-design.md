@@ -77,10 +77,13 @@ Counted parts.
 
 Both tables have RLS enabled. Policies match the existing pattern: authentication is Supabase Auth (`db.auth.getUser()` in `system.js:70`), with the app's `users` table keyed to the auth user id.
 
-- **Select, insert, update, delete:** any signed-in user (`auth.uid() is not null`).
+- **Database (RLS):** select, insert, update, delete for the `authenticated` role.
 - **No public access.** Unlike `tickets`, inventory has no customer-facing page, so the anon role gets nothing.
+- **Page guard:** `SystemApp.requireManager()`, matching `dashboard.js:77`.
 
-Role-based restrictions (e.g. manager-only delete) are not applied in v1. The `requireManager()` helper exists at `system.js:94` if this is wanted later.
+The page guard is manager-only rather than any-signed-in-staff, so that inventory is not more permissive than the dashboard it sits beside. Loosening it later to `requireAuth()` is a one-word change if technicians should see stock.
+
+Shared functions are reached through the `SystemApp` namespace object (`system.js:401`, exposed at `system.js:416`), not as bare globals.
 
 ## User interface
 
