@@ -427,9 +427,14 @@ function showToast(msg, type = 'info') {
     box-shadow:0 4px 20px rgba(0,0,0,0.4);
     animation:fadeInUp 0.3s ease;
   `;
-    const style = document.createElement('style');
-    style.textContent = `@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`;
-    document.head.appendChild(style);
+    // Inject the keyframes once, not on every toast — repeated calls used to
+    // pile up identical <style> nodes in <head> for the life of the page.
+    if (!document.getElementById('toastKeyframes')) {
+        const style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent = `@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`;
+        document.head.appendChild(style);
+    }
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }

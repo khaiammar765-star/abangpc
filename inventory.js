@@ -5,6 +5,7 @@
 let currentUser = null;
 let laptopFilter = 'in_stock';
 let editingLaptopId = null;
+let editingLaptopSoldCount = 0;
 let editingItemId = null;
 
 // =============================================
@@ -13,7 +14,10 @@ let editingItemId = null;
 function fmtPrice(v) {
     if (v === null || v === undefined || v === '')
         return '—';
-    return 'RM ' + Number(v).toFixed(2);
+    const n = Number(v);
+    if (!Number.isFinite(n))
+        return '—';
+    return 'RM ' + n.toFixed(2);
 }
 
 function escapeHtml(s) {
@@ -170,6 +174,7 @@ async function editLaptop(id) {
     document.getElementById('lapNotes').value = data.notes || '';
     document.getElementById('lapQty').value = data.quantity ?? 1;
     document.getElementById('lapPhoto').value = '';
+    editingLaptopSoldCount = data.sold_count || 0;
     openLaptopModal(id);
 }
 
@@ -189,7 +194,10 @@ async function markSold(id) {
         return;
 
     const nextQty = row.quantity - 1;
-    const { error } = await db.from('inventory_laptops')
+    // Guarded update: only applies if the counts are still what we just read,
+    // so two staff selling at the same moment cannot overwrite each other's
+    // sale. Zero rows updated means someone else got there first.
+    const { data: updated, error } = await db.from('inventory_laptops')
         .update({
             quantity: nextQty,
             sold_count: (row.sold_count || 0) + 1,
@@ -198,9 +206,17 @@ async function markSold(id) {
             status: nextQty === 0 ? 'sold' : 'in_stock',
             sold_at: new Date().toISOString(),
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('quantity', row.quantity)
+        .eq('sold_count', row.sold_count ?? 0)
+        .select('id');
     if (error) {
         showToast('Failed to record sale', 'error');
+        return;
+    }
+    if (!updated || updated.length === 0) {
+        showToast('Stock changed on another device — refreshed, please try again', 'error');
+        await loadLaptops();
         return;
     }
     await loadLaptops();
@@ -219,15 +235,24 @@ async function unmarkSold(id) {
         showToast('Nothing to restock', 'error');
         return;
     }
-    const { error } = await db.from('inventory_laptops')
+    // Guarded update, same reasoning as markSold.
+    const { data: updated, error } = await db.from('inventory_laptops')
         .update({
             quantity: (row.quantity || 0) + 1,
             sold_count: row.sold_count - 1,
             status: 'in_stock',
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('quantity', row.quantity)
+        .eq('sold_count', row.sold_count)
+        .select('id');
     if (error) {
         showToast('Failed to restock', 'error');
+        return;
+    }
+    if (!updated || updated.length === 0) {
+        showToast('Stock changed on another device — refreshed, please try again', 'error');
+        await loadLaptops();
         return;
     }
     await loadLaptops();
@@ -274,6 +299,7 @@ function openLaptopModal(id) {
         document.getElementById('lapCondition').value = '';
         document.getElementById('lapPhoto').value = '';
         document.getElementById('lapQty').value = '1';
+        editingLaptopSoldCount = 0;
     }
     document.getElementById('laptopModal').classList.remove('hidden');
 }
@@ -289,6 +315,21 @@ async function saveLaptop() {
     errEl.classList.add('hidden');
 
     const priceRaw = document.getElementById('lapPrice').value.trim();
+    const price = priceRaw === '' ? null : Number(priceRaw);
+    if (price !== null && (!Number.isFinite(price) || price < 0)) {
+        showToast('Price must be 0 or more', 'error');
+        return;
+    }
+
+    // A batch with 0 left and 0 sold matches neither tab filter and would
+    // vanish from the page, so quantity 0 is only allowed once something
+    // has actually been sold.
+    const quantity = Math.max(0, parseInt(document.getElementById('lapQty').value, 10) || 0);
+    if (quantity === 0 && editingLaptopSoldCount === 0) {
+        showToast('Quantity must be at least 1 — delete the laptop instead if it is gone', 'error');
+        return;
+    }
+
     const payload = {
         title,
         brand: document.getElementById('lapBrand').value.trim() || null,
@@ -298,8 +339,11 @@ async function saveLaptop() {
         storage: document.getElementById('lapStorage').value.trim() || null,
         condition: document.getElementById('lapCondition').value || null,
         notes: document.getElementById('lapNotes').value.trim() || null,
-        price: priceRaw === '' ? null : Number(priceRaw),
-        quantity: Math.max(0, parseInt(document.getElementById('lapQty').value, 10) || 0),
+        price,
+        quantity,
+        // Keep status in step with the counts on edit too, the same way
+        // markSold does, so the Supabase table never contradicts the tabs.
+        status: quantity === 0 ? 'sold' : 'in_stock',
     };
 
     const btn = document.getElementById('saveLaptopBtn');
@@ -392,9 +436,20 @@ async function adjustQty(id, delta) {
         return;
     }
     const next = Math.max(0, (row.quantity || 0) + delta);
-    const { error } = await db.from('inventory_items').update({ quantity: next }).eq('id', id);
+    // Guarded update: only applies if the quantity is still what we just read,
+    // so two staff adjusting the same part at once cannot lose an update.
+    const { data: updated, error } = await db.from('inventory_items')
+        .update({ quantity: next })
+        .eq('id', id)
+        .eq('quantity', row.quantity)
+        .select('id');
     if (error) {
         showToast('Failed to update stock', 'error');
+        return;
+    }
+    if (!updated || updated.length === 0) {
+        showToast('Stock changed on another device — refreshed, please try again', 'error');
+        await loadItems();
         return;
     }
     await loadItems();
@@ -452,11 +507,17 @@ async function saveItem() {
     errEl.classList.add('hidden');
 
     const priceRaw = document.getElementById('itemPrice').value.trim();
+    const price = priceRaw === '' ? null : Number(priceRaw);
+    if (price !== null && (!Number.isFinite(price) || price < 0)) {
+        showToast('Price must be 0 or more', 'error');
+        return;
+    }
+
     const payload = {
         name,
         category: document.getElementById('itemCategory').value,
-        quantity: parseInt(document.getElementById('itemQty').value, 10) || 0,
-        price: priceRaw === '' ? null : Number(priceRaw),
+        quantity: Math.max(0, parseInt(document.getElementById('itemQty').value, 10) || 0),
+        price,
         notes: document.getElementById('itemNotes').value.trim() || null,
     };
 
