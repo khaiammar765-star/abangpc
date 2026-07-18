@@ -126,6 +126,23 @@ function renderLaptops(rows) {
     }).join('');
 }
 
+// Reuses the existing ticket-photos bucket with an inventory/ prefix, so no
+// new bucket or storage policy is needed. Returns null on failure rather than
+// throwing — losing a photo must never lose the stock record.
+async function uploadLaptopPhoto(file) {
+    const ext = file.name.split('.').pop();
+    const path = `inventory/${Date.now()}.${ext}`;
+    const { error: uploadErr } = await db.storage
+        .from('ticket-photos')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+    if (uploadErr) {
+        showToast('Photo upload failed — saving without photo', 'error');
+        return null;
+    }
+    const { data: urlData } = db.storage.from('ticket-photos').getPublicUrl(path);
+    return urlData.publicUrl;
+}
+
 function openLaptopModal(id) {
     editingLaptopId = id || null;
     document.getElementById('laptopModalTitle').textContent = id ? '💻 Edit Laptop' : '💻 Add Laptop';
@@ -167,6 +184,14 @@ async function saveLaptop() {
     btn.disabled = true;
     const wasEditing = editingLaptopId;
     try {
+        const fileInput = document.getElementById('lapPhoto');
+        if (fileInput.files && fileInput.files.length > 0) {
+            btn.textContent = 'Uploading photo...';
+            const url = await uploadLaptopPhoto(fileInput.files[0]);
+            if (url)
+                payload.photo_url = url;
+        }
+
         let error;
         if (wasEditing) {
             ({ error } = await db.from('inventory_laptops').update(payload).eq('id', wasEditing));
@@ -190,6 +215,7 @@ async function saveLaptop() {
     }
     finally {
         btn.disabled = false;
+        btn.textContent = '💾 Save Laptop';
     }
 }
 
