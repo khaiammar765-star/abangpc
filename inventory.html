@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Inventory</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+</head>
+<body>
+
+<div class="system-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn-menu" id="menuBtn">☰</button>
+        <span class="topbar-title">Inventory</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" id="addItemBtn">➕ Add Part</button>
+        <button class="btn btn-primary btn-sm" id="addLaptopBtn">💻 Add Laptop</button>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- LAPTOPS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">💻 Used Laptops</span>
+          <div class="status-tabs" id="laptopFilter">
+            <button class="status-tab active" data-filter="in_stock">In Stock</button>
+            <button class="status-tab" data-filter="sold">Sold</button>
+          </div>
+        </div>
+        <div class="tickets-grid" id="laptopGrid"></div>
+      </div>
+
+      <!-- PARTS -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+          <span class="card-title">🔩 Parts Stock</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== LAPTOP MODAL ===== -->
+<div class="modal-overlay hidden" id="laptopModal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <span class="modal-title" id="laptopModalTitle">💻 Add Laptop</span>
+      <button class="modal-close" id="closeLaptopModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Title *</label>
+          <div class="input-wrap">
+            <span class="input-icon">💻</span>
+            <input type="text" id="lapTitle" placeholder="e.g. Dell Latitude 7490" />
+          </div>
+          <span class="field-err hidden" id="lapTitleErr">Title is required</span>
+        </div>
+
+        <div class="field-group">
+          <label>Brand</label>
+          <div class="input-wrap">
+            <span class="input-icon">🏷️</span>
+            <input type="text" id="lapBrand" placeholder="Dell" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Model</label>
+          <div class="input-wrap">
+            <span class="input-icon">#️⃣</span>
+            <input type="text" id="lapModel" placeholder="7490" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>CPU</label>
+          <div class="input-wrap">
+            <span class="input-icon">🧠</span>
+            <input type="text" id="lapCpu" placeholder="i5-8350U" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>RAM</label>
+          <div class="input-wrap">
+            <span class="input-icon">🧩</span>
+            <input type="text" id="lapRam" placeholder="8GB DDR4" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Storage</label>
+          <div class="input-wrap">
+            <span class="input-icon">💾</span>
+            <input type="text" id="lapStorage" placeholder="256GB NVMe" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Condition</label>
+          <select id="lapCondition" class="diag-select">
+            <option value="">— Not set —</option>
+            <option value="Like New">Like New</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label>Price (optional)</label>
+          <div class="input-wrap">
+            <span class="input-icon">💰</span>
+            <input type="number" step="0.01" min="0" id="lapPrice" placeholder="Leave empty if not set" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Photo (optional)</label>
+          <input type="file" id="lapPhoto" accept="image/*" />
+        </div>
+
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Notes</label>
+          <textarea id="lapNotes" rows="2" placeholder="Scratches, missing charger, etc."></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelLaptopBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveLaptopBtn">💾 Save Laptop</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PART MODAL ===== -->
+<div class="modal-overlay hidden" id="itemModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title" id="itemModalTitle">🔩 Add Part</span>
+      <button class="modal-close" id="closeItemModal">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="field-group">
+        <label>Name *</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔩</span>
+          <input type="text" id="itemName" placeholder="e.g. Kingston 8GB DDR4 3200" />
+        </div>
+        <span class="field-err hidden" id="itemNameErr">Name is required</span>
+      </div>
+
+      <div class="field-group">
+        <label>Category *</label>
+        <select id="itemCategory" class="diag-select">
+          <option value="gpu">GPU</option>
+          <option value="ram">RAM</option>
+          <option value="ssd">SSD</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>Quantity</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔢</span>
+          <input type="number" min="0" step="1" id="itemQty" value="0" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Price (optional)</label>
+        <div class="input-wrap">
+          <span class="input-icon">💰</span>
+          <input type="number" step="0.01" min="0" id="itemPrice" placeholder="Leave empty if not set" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Notes</label>
+        <textarea id="itemNotes" rows="2"></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelItemBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveItemBtn">💾 Save Part</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="system.js"></script>
+<script src="inventory.js"></script>
+</body>
+</html>
