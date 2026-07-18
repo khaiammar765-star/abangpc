@@ -99,9 +99,56 @@ function renderItems(rows) {
         <td><strong>${r.quantity}</strong></td>
         <td>${fmtPrice(r.price)}</td>
         <td class="text-muted">${escapeHtml(r.notes) || '—'}</td>
-        <td></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-secondary btn-sm" onclick="adjustQty('${r.id}', -1)" ${r.quantity === 0 ? 'disabled' : ''}>−</button>
+          <button class="btn btn-secondary btn-sm" onclick="adjustQty('${r.id}', 1)">+</button>
+          <button class="btn btn-secondary btn-sm" onclick="editItem('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('${r.id}')">🗑️</button>
+        </td>
       </tr>
     `).join('');
+}
+
+async function adjustQty(id, delta) {
+    const { data: row, error: readErr } = await db
+        .from('inventory_items').select('quantity').eq('id', id).single();
+    if (readErr) {
+        showToast('Failed to read stock', 'error');
+        return;
+    }
+    const next = Math.max(0, (row.quantity || 0) + delta);
+    const { error } = await db.from('inventory_items').update({ quantity: next }).eq('id', id);
+    if (error) {
+        showToast('Failed to update stock', 'error');
+        return;
+    }
+    await loadItems();
+}
+
+async function editItem(id) {
+    const { data, error } = await db.from('inventory_items').select('*').eq('id', id).single();
+    if (error || !data) {
+        showToast('Failed to load part', 'error');
+        return;
+    }
+    document.getElementById('itemName').value = data.name || '';
+    document.getElementById('itemCategory').value = data.category || 'other';
+    document.getElementById('itemQty').value = data.quantity ?? 0;
+    document.getElementById('itemPrice').value = data.price ?? '';
+    document.getElementById('itemNotes').value = data.notes || '';
+    openItemModal(id);
+}
+
+async function deleteItem(id) {
+    if (!confirm('Delete this part from inventory?\n\nThis cannot be undone.'))
+        return;
+    const { error } = await db.from('inventory_items').delete().eq('id', id);
+    if (error) {
+        showToast('Failed to delete part', 'error');
+        return;
+    }
+    await loadItems();
+    showToast('🗑️ Part deleted', 'success');
 }
 
 function openItemModal(id) {
@@ -167,6 +214,13 @@ async function saveItem() {
         btn.disabled = false;
     }
 }
+
+// =============================================
+// EXPOSE FUNCTIONS TO HTML (onclick handlers)
+// =============================================
+window.adjustQty = adjustQty;
+window.editItem = editItem;
+window.deleteItem = deleteItem;
 
 // =============================================
 // START
