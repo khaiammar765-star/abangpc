@@ -103,7 +103,13 @@ New files `inventory.html` and `inventory.js`, following the existing convention
 - Page guarded by `requireAuth()` on load.
 - Sidebar rendered via `renderSidebar(user, 'inventory')`.
 - Reuses `system.css` and `style.css`; no new stylesheet.
-- Uses the existing `showToast()` and `closeModal()` helpers where practical.
+- Script load order matches existing pages: `config.js`, `system.js`, then `inventory.js`.
+
+### Shared helper refactor (prerequisite)
+
+`showToast()` and `closeModal()` are currently defined in `dashboard.js` (lines 649 and 655), not in the shared `system.js`. Every page loads `system.js` before its own page script, so these two functions move to `system.js` unchanged and are then available to `inventory.js`.
+
+This is a pure move — no behaviour change, no signature change. `dashboard.js` continues to call them exactly as before, because `system.js` is loaded first on every page that uses them (`dashboard.html:895-896`). This must be done before `inventory.js` can use them, and it is the only change this feature makes to existing production code.
 
 Two sections on a single page:
 
@@ -138,7 +144,7 @@ Manual verification against the production Supabase project, since v1 is additiv
 7. Adjust quantity with `−` / `+`; confirm it persists and cannot go below zero.
 8. Delete a laptop and a part; confirm removal.
 9. Sign out and visit `inventory.html` directly; confirm redirect to `login.html`.
-10. Confirm existing dashboard, tickets, and status pages still work — the sidebar change touches every page.
+10. Confirm existing dashboard, tickets, and status pages still work — the sidebar change and the `showToast()` / `closeModal()` move both touch every page. Specifically re-test a ticket status update and a photo upload, since both rely on those two helpers.
 
 ## Rollback
 
