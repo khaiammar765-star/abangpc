@@ -57,13 +57,140 @@ function bindEvents() {
     document.getElementById('saveItemBtn')?.addEventListener('click', saveItem);
     document.getElementById('cancelItemBtn')?.addEventListener('click', () => closeModal('itemModal'));
     document.getElementById('closeItemModal')?.addEventListener('click', () => closeModal('itemModal'));
+
+    // Laptops
+    document.getElementById('addLaptopBtn')?.addEventListener('click', () => openLaptopModal(null));
+    document.getElementById('saveLaptopBtn')?.addEventListener('click', saveLaptop);
+    document.getElementById('cancelLaptopBtn')?.addEventListener('click', () => closeModal('laptopModal'));
+    document.getElementById('closeLaptopModal')?.addEventListener('click', () => closeModal('laptopModal'));
+
+    // In Stock / Sold filter
+    document.querySelectorAll('#laptopFilter .status-tab').forEach(tab => {
+        tab.addEventListener('click', async () => {
+            document.querySelectorAll('#laptopFilter .status-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            laptopFilter = tab.dataset.filter;
+            await loadLaptops();
+        });
+    });
 }
 
 // =============================================
 // LAPTOPS
 // =============================================
 async function loadLaptops() {
-    // Implemented in Task 7
+    const grid = document.getElementById('laptopGrid');
+    grid.innerHTML = `<div style="padding:30px;color:var(--muted);">Loading...</div>`;
+
+    const { data, error } = await db
+        .from('inventory_laptops')
+        .select('*')
+        .eq('status', laptopFilter)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        grid.innerHTML = `<div style="padding:30px;color:var(--danger);">Failed to load laptops.</div>`;
+        return;
+    }
+    renderLaptops(data || []);
+}
+
+function renderLaptops(rows) {
+    const grid = document.getElementById('laptopGrid');
+    if (!rows.length) {
+        grid.innerHTML = `<div class="empty-state">
+            <div class="empty-state-icon">💻</div>
+            <div>${laptopFilter === 'sold' ? 'No laptops sold yet.' : 'No laptops in stock. Click "💻 Add Laptop" to start.'}</div>
+          </div>`;
+        return;
+    }
+    grid.innerHTML = rows.map(r => {
+        const specs = [r.cpu, r.ram, r.storage].filter(Boolean).map(escapeHtml).join(' • ');
+        return `
+      <div class="ticket-card">
+        ${r.photo_url
+            ? `<img src="${escapeHtml(r.photo_url)}" alt="" style="width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;" />`
+            : `<div style="width:100%;height:150px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:10px;font-size:38px;">💻</div>`}
+        <div class="ticket-card-header">
+          <span class="ticket-num">${escapeHtml(r.title)}</span>
+          ${r.condition ? `<span class="badge">${escapeHtml(r.condition)}</span>` : ''}
+        </div>
+        <div class="ticket-card-device">${escapeHtml([r.brand, r.model].filter(Boolean).join(' ')) || '—'}</div>
+        <div class="ticket-card-issue">${specs || 'No specs recorded'}</div>
+        ${r.notes ? `<div class="text-muted" style="font-size:12px;margin-top:6px;">${escapeHtml(r.notes)}</div>` : ''}
+        <div class="ticket-card-footer">
+          <span class="ticket-price">${fmtPrice(r.price)}</span>
+          <div class="ticket-card-actions"></div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function openLaptopModal(id) {
+    editingLaptopId = id || null;
+    document.getElementById('laptopModalTitle').textContent = id ? '💻 Edit Laptop' : '💻 Add Laptop';
+    document.getElementById('lapTitleErr').classList.add('hidden');
+
+    if (!id) {
+        ['lapTitle', 'lapBrand', 'lapModel', 'lapCpu', 'lapRam', 'lapStorage', 'lapPrice', 'lapNotes']
+            .forEach(f => { document.getElementById(f).value = ''; });
+        document.getElementById('lapCondition').value = '';
+        document.getElementById('lapPhoto').value = '';
+    }
+    document.getElementById('laptopModal').classList.remove('hidden');
+}
+
+async function saveLaptop() {
+    const title = document.getElementById('lapTitle').value.trim();
+    const errEl = document.getElementById('lapTitleErr');
+
+    if (!title) {
+        errEl.classList.remove('hidden');
+        return;
+    }
+    errEl.classList.add('hidden');
+
+    const priceRaw = document.getElementById('lapPrice').value.trim();
+    const payload = {
+        title,
+        brand: document.getElementById('lapBrand').value.trim() || null,
+        model: document.getElementById('lapModel').value.trim() || null,
+        cpu: document.getElementById('lapCpu').value.trim() || null,
+        ram: document.getElementById('lapRam').value.trim() || null,
+        storage: document.getElementById('lapStorage').value.trim() || null,
+        condition: document.getElementById('lapCondition').value || null,
+        notes: document.getElementById('lapNotes').value.trim() || null,
+        price: priceRaw === '' ? null : Number(priceRaw),
+    };
+
+    const btn = document.getElementById('saveLaptopBtn');
+    btn.disabled = true;
+    const wasEditing = editingLaptopId;
+    try {
+        let error;
+        if (wasEditing) {
+            ({ error } = await db.from('inventory_laptops').update(payload).eq('id', wasEditing));
+        }
+        else {
+            payload.created_by = currentUser.id;
+            ({ error } = await db.from('inventory_laptops').insert(payload));
+        }
+        if (error)
+            throw error;
+
+        // Only clear the edit id on success. Clearing it on failure would turn
+        // a retry into an INSERT, silently duplicating the row.
+        editingLaptopId = null;
+        closeModal('laptopModal');
+        await loadLaptops();
+        showToast(wasEditing ? '✅ Laptop updated!' : '✅ Laptop added!', 'success');
+    }
+    catch (err) {
+        showToast(err.message || 'Failed to save laptop', 'error');
+    }
+    finally {
+        btn.disabled = false;
+    }
 }
 
 // =============================================
