@@ -34,13 +34,13 @@ const CATEGORY_LABELS = {
     gpu: 'GPU',
     ram: 'RAM',
     ssd: 'SSD',
-    processor: 'Processor',
-    motherboard: 'Motherboard',
-    monitor: 'Monitor',
-    mouse: 'Mouse',
-    mousepad: 'Mousepad',
-    speaker: 'Speaker',
-    other: 'Other',
+    processor: 'PROCESSOR',
+    motherboard: 'MOTHERBOARD',
+    monitor: 'MONITOR',
+    mouse: 'MOUSE',
+    mousepad: 'MOUSEPAD',
+    speaker: 'SPEAKER',
+    other: 'OTHER',
 };
 
 // =============================================
