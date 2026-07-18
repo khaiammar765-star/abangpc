@@ -82,11 +82,15 @@ async function loadLaptops() {
     const grid = document.getElementById('laptopGrid');
     grid.innerHTML = `<div style="padding:30px;color:var(--muted);">Loading...</div>`;
 
-    const { data, error } = await db
-        .from('inventory_laptops')
-        .select('*')
-        .eq('status', laptopFilter)
-        .order('created_at', { ascending: false });
+    // A laptop card is a batch of identical units: `quantity` is what is left,
+    // `sold_count` is how many have gone. A part-sold batch legitimately shows
+    // in both tabs, so filter on the counts rather than a single status.
+    let query = db.from('inventory_laptops').select('*');
+    query = laptopFilter === 'sold'
+        ? query.gt('sold_count', 0)
+        : query.gt('quantity', 0);
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
         grid.innerHTML = `<div style="padding:30px;color:var(--danger);">Failed to load laptops.</div>`;
@@ -113,8 +117,11 @@ function renderLaptops(rows) {
             : `<div style="width:100%;height:150px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:10px;font-size:38px;">💻</div>`}
         <div class="ticket-card-header">
           <span class="ticket-num">${escapeHtml(r.title)}</span>
-          ${r.condition ? `<span class="badge">${escapeHtml(r.condition)}</span>` : ''}
+          ${laptopFilter === 'sold'
+            ? `<span class="badge">${r.sold_count} sold</span>`
+            : `<span class="badge">Qty ${r.quantity}</span>`}
         </div>
+        ${r.condition ? `<div class="text-muted" style="font-size:12px;margin-top:4px;">${escapeHtml(r.condition)}</div>` : ''}
         <div class="ticket-card-device">${escapeHtml([r.brand, r.model].filter(Boolean).join(' ')) || '—'}</div>
         <div class="ticket-card-issue">${specs || 'No specs recorded'}</div>
         ${r.notes ? `<div class="text-muted" style="font-size:12px;margin-top:6px;">${escapeHtml(r.notes)}</div>` : ''}
@@ -122,9 +129,9 @@ function renderLaptops(rows) {
           <span class="ticket-price">${fmtPrice(r.price)}</span>
           <div class="ticket-card-actions">
             <button class="btn btn-secondary btn-sm" onclick="editLaptop('${r.id}')">✏️</button>
-            ${r.status === 'in_stock'
-                ? `<button class="btn btn-primary btn-sm" onclick="markSold('${r.id}')">💰 Sold</button>`
-                : `<button class="btn btn-secondary btn-sm" onclick="unmarkSold('${r.id}')">↩️ Restock</button>`}
+            ${laptopFilter === 'sold'
+                ? `<button class="btn btn-secondary btn-sm" onclick="unmarkSold('${r.id}')">↩️ Restock</button>`
+                : `<button class="btn btn-primary btn-sm" onclick="markSold('${r.id}')">💰 Sell 1</button>`}
             <button class="btn btn-danger btn-sm" onclick="deleteLaptop('${r.id}')">🗑️</button>
           </div>
         </div>
@@ -147,27 +154,63 @@ async function editLaptop(id) {
     document.getElementById('lapCondition').value = data.condition || '';
     document.getElementById('lapPrice').value = data.price ?? '';
     document.getElementById('lapNotes').value = data.notes || '';
+    document.getElementById('lapQty').value = data.quantity ?? 1;
     document.getElementById('lapPhoto').value = '';
     openLaptopModal(id);
 }
 
+// Sells one unit out of the batch: quantity down one, sold_count up one.
 async function markSold(id) {
-    if (!confirm('Mark this laptop as sold?\n\nIt will move to the Sold list.'))
+    const { data: row, error: readErr } = await db.from('inventory_laptops')
+        .select('title, quantity, sold_count').eq('id', id).single();
+    if (readErr || !row) {
+        showToast('Failed to read laptop', 'error');
         return;
+    }
+    if ((row.quantity || 0) <= 0) {
+        showToast('None left in stock', 'error');
+        return;
+    }
+    if (!confirm(`Sell one "${row.title}"?\n\nIn stock: ${row.quantity} → ${row.quantity - 1}`))
+        return;
+
+    const nextQty = row.quantity - 1;
     const { error } = await db.from('inventory_laptops')
-        .update({ status: 'sold', sold_at: new Date().toISOString() })
+        .update({
+            quantity: nextQty,
+            sold_count: (row.sold_count || 0) + 1,
+            // status is kept in step with the counts so the table stays readable
+            // in Supabase, even though the tabs now filter on the counts.
+            status: nextQty === 0 ? 'sold' : 'in_stock',
+            sold_at: new Date().toISOString(),
+        })
         .eq('id', id);
     if (error) {
-        showToast('Failed to mark as sold', 'error');
+        showToast('Failed to record sale', 'error');
         return;
     }
     await loadLaptops();
-    showToast('💰 Marked as sold!', 'success');
+    showToast('💰 Sold 1!', 'success');
 }
 
+// Puts one sold unit back: the exact inverse of markSold.
 async function unmarkSold(id) {
+    const { data: row, error: readErr } = await db.from('inventory_laptops')
+        .select('quantity, sold_count').eq('id', id).single();
+    if (readErr || !row) {
+        showToast('Failed to read laptop', 'error');
+        return;
+    }
+    if ((row.sold_count || 0) <= 0) {
+        showToast('Nothing to restock', 'error');
+        return;
+    }
     const { error } = await db.from('inventory_laptops')
-        .update({ status: 'in_stock', sold_at: null })
+        .update({
+            quantity: (row.quantity || 0) + 1,
+            sold_count: row.sold_count - 1,
+            status: 'in_stock',
+        })
         .eq('id', id);
     if (error) {
         showToast('Failed to restock', 'error');
@@ -216,6 +259,7 @@ function openLaptopModal(id) {
             .forEach(f => { document.getElementById(f).value = ''; });
         document.getElementById('lapCondition').value = '';
         document.getElementById('lapPhoto').value = '';
+        document.getElementById('lapQty').value = '1';
     }
     document.getElementById('laptopModal').classList.remove('hidden');
 }
@@ -241,6 +285,7 @@ async function saveLaptop() {
         condition: document.getElementById('lapCondition').value || null,
         notes: document.getElementById('lapNotes').value.trim() || null,
         price: priceRaw === '' ? null : Number(priceRaw),
+        quantity: Math.max(0, parseInt(document.getElementById('lapQty').value, 10) || 0),
     };
 
     const btn = document.getElementById('saveLaptopBtn');
