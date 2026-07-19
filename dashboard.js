@@ -644,41 +644,6 @@ async function confirmStatusUpdate() {
     showToast('\u2705 Status updated!', 'success');
 }
 // =============================================
-// MODAL HELPERS
-// =============================================
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-// =============================================
-// TOAST NOTIFICATION
-// =============================================
-function showToast(msg, type = 'info') {
-    const existing = document.getElementById('toast');
-    if (existing)
-        existing.remove();
-    const colors = {
-        success: 'var(--success)',
-        error: 'var(--danger)',
-        info: 'var(--yellow)',
-    };
-    const toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.textContent = msg;
-    toast.style.cssText = `
-    position:fixed;bottom:24px;right:24px;z-index:9999;
-    background:var(--card);border:1px solid ${colors[type]};
-    color:${colors[type]};padding:12px 20px;border-radius:10px;
-    font-size:14px;font-weight:600;
-    box-shadow:0 4px 20px rgba(0,0,0,0.4);
-    animation:fadeInUp 0.3s ease;
-  `;
-    const style = document.createElement('style');
-    style.textContent = `@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`;
-    document.head.appendChild(style);
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-// =============================================
 // BIND EVENTS
 // =============================================
 function bindEvents() {
