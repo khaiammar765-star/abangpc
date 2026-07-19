@@ -1050,3 +1050,87 @@ tbody tr:last-child { border-bottom: none; }
   background: var(--surface);
   color: var(--yellow);
 }
+
+/* ==============================
+   MOBILE CARD TABLES
+   Opt-in via class="stack-mobile". On phones the table collapses into
+   one card per row, with each cell labelled by its data-label attribute.
+   Desktop is untouched. Tables without the class (e.g. .diag-table in the
+   diagnose forms) keep their normal table layout at every width.
+   ============================== */
+
+/* Desktop truncation for the ticket issue cell, moved out of an inline
+   style so the mobile rule below can override it without !important. */
+.issue-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+@media (max-width: 768px) {
+  /* Cards sit inside .page-content padding and then hold their own padded
+     rows, so trim the middle layer — 24px each side is a lot of a 375px
+     screen. Applies to every card, which all gain usable width on a phone. */
+  .page-content .card { padding-left: 14px; padding-right: 14px; }
+
+  .stack-mobile thead { display: none; }
+
+  .stack-mobile,
+  .stack-mobile tbody,
+  .stack-mobile tr,
+  .stack-mobile td {
+    display: block;
+    width: 100%;
+  }
+
+  .stack-mobile tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  .stack-mobile td {
+    border: none;
+    padding: 6px 0;
+    max-width: none;
+  }
+  .stack-mobile td:first-child { padding-top: 0; }
+  .stack-mobile td:last-child { padding-bottom: 0; }
+
+  /* Column name shown above each value, since the header row is hidden */
+  .stack-mobile td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Full issue text on mobile — no room to truncate meaningfully */
+  .stack-mobile .issue-text {
+    white-space: normal;
+    overflow: visible;
+    max-width: none;
+  }
+
+  /* Actions get a little breathing room and sit above the card edge */
+  .stack-mobile td[data-label="Actions"] {
+    padding-top: 12px;
+    margin-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Loading / empty-state rows are not real records: no card chrome */
+  .stack-mobile tr.state-row {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+}

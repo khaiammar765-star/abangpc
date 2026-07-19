@@ -89,7 +89,7 @@ async function initDashboard() {
 // =============================================
 async function loadTickets() {
     const tbody = document.getElementById('ticketsBody');
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">Loading...</td></tr>`;
+    tbody.innerHTML = `<tr class="state-row"><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Loading...</td></tr>`;
     const { data, error } = await db
         .from('tickets')
         .select(`
@@ -98,7 +98,7 @@ async function loadTickets() {
     `)
         .order('created_at', { ascending: false });
     if (error) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--danger);">Error loading tickets: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">Error loading tickets: ${error.message}</td></tr>`;
         return;
     }
     allTickets = data || [];
@@ -188,7 +188,7 @@ function renderTickets(tickets) {
     countEl.textContent = `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`;
     if (tickets.length === 0) {
         tbody.innerHTML = `
-      <tr><td colspan="9">
+      <tr class="state-row"><td colspan="7">
         <div class="empty-state">
           <div class="empty-state-icon">🎫</div>
           <h3>No tickets found</h3>
@@ -201,31 +201,31 @@ function renderTickets(tickets) {
         var _a, _b;
         return `
     <tr>
-      <td>
+      <td data-label="Ticket #">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--yellow);font-size:13px;">${t.ticket_number}</span>
           ${getTicketAge(t.estimated_completion, t.status).badge}
         </div>
       </td>
-      <td>
+      <td data-label="Customer">
         <div class="ticket-customer">${((_a = t.customers) === null || _a === void 0 ? void 0 : _a.name) || '—'}</div>
         <div class="ticket-device">${((_b = t.customers) === null || _b === void 0 ? void 0 : _b.phone) || ''}</div>
       </td>
-      <td>
+      <td data-label="Device">
         <div>${t.device_type === 'laptop' ? '💻' : '🖥️'} ${t.device_brand || ''}</div>
         <div class="ticket-device">${t.device_model || ''}</div>
       </td>
-      <td style="max-width:180px;">
-        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;" title="${t.issue_description}">
+      <td data-label="Issue">
+        <div class="issue-text" title="${t.issue_description}">
           ${t.issue_description}
         </div>
       </td>
-      <td>${SystemApp.getStatusBadgeHTML(t.status)}</td>
-      <td style="color:var(--muted);font-size:13px;">
+      <td data-label="Status">${SystemApp.getStatusBadgeHTML(t.status)}</td>
+      <td data-label="Created" style="color:var(--muted);font-size:13px;">
         ${SystemApp.formatDate(t.created_at)}
         <div style="font-size:11px;">${SystemApp.formatDuration(t.created_at)} ago</div>
       </td>
-      <td>
+      <td data-label="Actions">
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${t.id}')">👁️ View</button>
           <button class="btn btn-secondary btn-sm" onclick="openStatusModal('${t.id}','${t.status}')">🔄</button>

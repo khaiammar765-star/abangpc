@@ -390,7 +390,7 @@ async function saveLaptop() {
 // =============================================
 async function loadItems() {
     const tbody = document.getElementById('itemsBody');
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Loading...</td></tr>`;
+    tbody.innerHTML = `<tr class="state-row"><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Loading...</td></tr>`;
 
     const { data, error } = await db
         .from('inventory_items')
@@ -399,7 +399,7 @@ async function loadItems() {
         .order('name', { ascending: true });
 
     if (error) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">Failed to load parts.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">Failed to load parts.</td></tr>`;
         return;
     }
     renderItems(data || []);
@@ -408,17 +408,17 @@ async function loadItems() {
 function renderItems(rows) {
     const tbody = document.getElementById('itemsBody');
     if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">No parts yet. Click "➕ Add Part" to start.</td></tr>`;
+        tbody.innerHTML = `<tr class="state-row"><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">No parts yet. Click "➕ Add Part" to start.</td></tr>`;
         return;
     }
     tbody.innerHTML = rows.map(r => `
       <tr${r.quantity === 0 ? ' style="opacity:0.45;"' : ''}>
-        <td>${escapeHtml(r.name)}</td>
-        <td><span class="badge">${CATEGORY_LABELS[r.category] || escapeHtml(r.category)}</span></td>
-        <td><strong>${r.quantity}</strong></td>
-        <td>${fmtPrice(r.price)}</td>
-        <td class="text-muted">${escapeHtml(r.notes) || '—'}</td>
-        <td style="white-space:nowrap;">
+        <td data-label="Name">${escapeHtml(r.name)}</td>
+        <td data-label="Category"><span class="badge">${CATEGORY_LABELS[r.category] || escapeHtml(r.category)}</span></td>
+        <td data-label="Quantity"><strong>${r.quantity}</strong></td>
+        <td data-label="Price">${fmtPrice(r.price)}</td>
+        <td data-label="Notes" class="text-muted">${escapeHtml(r.notes) || '—'}</td>
+        <td data-label="Actions" style="white-space:nowrap;">
           <button class="btn btn-secondary btn-sm" onclick="adjustQty('${r.id}', -1)" ${r.quantity === 0 ? 'disabled' : ''}>−</button>
           <button class="btn btn-secondary btn-sm" onclick="adjustQty('${r.id}', 1)">+</button>
           <button class="btn btn-secondary btn-sm" onclick="editItem('${r.id}')">✏️</button>
