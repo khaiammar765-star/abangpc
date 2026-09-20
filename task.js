@@ -1,6 +1,21 @@
 // =============================================
 // AbangPC - Staff Task
 // =============================================
+// A task moves through these statuses:
+//
+//   in_progress  ── doer clicks "Mark Done" ──►  awaiting_approval
+//                                                 (or awaiting_owner
+//                                                  if there are no approvers)
+//   awaiting_approval ── every approver approves ──►  awaiting_owner
+//   awaiting_owner    ── creator clicks "Accept"  ──►  completed
+//
+//   At any review point, "Send Back" returns the task to in_progress
+//   (and resets all approver chips to pending), while "Reject" ends it
+//   as failed. Both require a written reason.
+//
+// Only the superadmin (AbangPC) can create tasks. Everyone can do,
+// approve, and view. Each page section below is grouped by role.
+// =============================================
 let currentUser = null;
 let allStaff = [];
 let staffById = {};
