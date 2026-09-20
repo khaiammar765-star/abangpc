@@ -399,6 +399,19 @@ function parsePgInterval(interval) {
     return ms;
 }
 // =============================================
+// HTML ESCAPE
+// =============================================
+function escapeHtml(s) {
+    if (!s)
+        return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+// =============================================
 // MODAL HELPERS
 // =============================================
 function closeModal(id) {
@@ -457,5 +470,6 @@ const SystemApp = {
     getUserInitials,
     showToast,
     closeModal,
+    escapeHtml,
 };
 window.SystemApp = SystemApp;

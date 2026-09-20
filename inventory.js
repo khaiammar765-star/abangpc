@@ -20,17 +20,6 @@ function fmtPrice(v) {
     return 'RM ' + n.toFixed(2);
 }
 
-function escapeHtml(s) {
-    if (!s)
-        return '';
-    return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
 // Keys must match the <option value=""> list in inventory.html. The category
 // column is free text, so adding one here needs no database change. Unknown
 // values still render, falling back to the raw string.
