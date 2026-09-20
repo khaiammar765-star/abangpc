@@ -13,3 +13,7 @@
 -- Drop approvers first: it references staff_tasks.
 drop table if exists public.staff_task_approvers;
 drop table if exists public.staff_tasks;
+
+-- Optional: remove the superadmin flag added for this feature.
+-- Harmless to leave in place (an unused boolean). Uncomment to fully revert.
+-- alter table public.users drop column if exists is_superadmin;

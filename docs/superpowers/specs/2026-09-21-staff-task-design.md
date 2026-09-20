@@ -107,7 +107,7 @@ A task with **no approvers** goes straight from `awaiting_approval` to `awaiting
 
 ## Permissions (enforced in the page, backed by RLS)
 
-- **Create a task:** any signed-in staff.
+- **Create a task:** superadmin only (AbangPC). Enforced by a `users.is_superadmin` boolean flag; the New Task button is hidden and `openTaskModal` refuses for non-superadmins. Role stays `manager` for the superadmin account so the existing page gates (`requireManager`) still admit them — the flag is additive and never replaces the role. Because only the superadmin creates tasks, `created_by` is always the superadmin, so final acceptance and delete (both guarded by `created_by`) are superadmin-only automatically.
 - **Mark Done:** only the doer, only while `in_progress`.
 - **Approve / Send Back / Reject at approval stage:** only a named approver of that task, only while `awaiting_approval`, and only if their own decision is still `pending`.
 - **Accept / Send Back / Reject at owner stage:** only the creator, only while `awaiting_owner`.

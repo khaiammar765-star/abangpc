@@ -19,6 +19,13 @@ async function initTask() {
     try {
         currentUser = await SystemApp.requireManager();
         SystemApp.renderSidebar(currentUser, 'task');
+        // Only the superadmin (AbangPC) may create/assign tasks. Everyone else
+        // can still do, approve, and view — so the page loads for all managers,
+        // but the New Task button is hidden for non-superadmins.
+        if (!currentUser.is_superadmin) {
+            const btn = document.getElementById('addTaskBtn');
+            if (btn) btn.style.display = 'none';
+        }
         await loadStaff();
         bindEvents();
         await loadTasks();
@@ -85,6 +92,11 @@ function bindEvents() {
 // CREATE TASK
 // =============================================
 function openTaskModal() {
+    // Guard behind the hidden button: creation is superadmin-only.
+    if (!currentUser.is_superadmin) {
+        SystemApp.showToast('Only AbangPC can create tasks', 'error');
+        return;
+    }
     document.getElementById('taskTitle').value = '';
     document.getElementById('taskDesc').value = '';
     document.getElementById('taskDoer').value = '';
