@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Calendar</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+</head>
+<body>
+
+<div class="system-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn-menu" id="menuBtn">☰</button>
+        <span class="topbar-title">Calendar</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" id="applyLeaveBtn">🌴 Apply for Leave</button>
+        <button class="btn btn-primary btn-sm" id="addEventBtn">➕ Add Event</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- MONTH GRID -->
+      <div class="card">
+        <div class="cal-toolbar">
+          <button class="btn btn-secondary btn-sm" id="calPrev">‹</button>
+          <span class="card-title" id="calLabel" style="min-width:180px;text-align:center;">—</span>
+          <button class="btn btn-secondary btn-sm" id="calNext">›</button>
+          <span style="margin-left:auto;font-size:12px;color:var(--muted);">
+            🔴 Closed &nbsp; 🔵 Activity &nbsp; 🟢 Leave
+          </span>
+        </div>
+        <div class="cal-grid" id="calDow"></div>
+        <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+      </div>
+
+      <!-- LEAVE REQUESTS -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+          <span class="card-title">🌴 Leave Requests</span>
+        </div>
+        <div id="leaveList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD EVENT MODAL (superadmin) ===== -->
+<div class="modal-overlay hidden" id="eventModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ Add Event</span>
+      <button class="modal-close" id="closeEventModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Type</label>
+        <select id="evType" class="diag-select">
+          <option value="closure">🔴 Shop Closure</option>
+          <option value="activity">🔵 Activity</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Title *</label>
+        <div class="input-wrap"><span class="input-icon">📝</span>
+          <input type="text" id="evTitle" placeholder="e.g. Hari Raya — shop closed" /></div>
+        <span class="field-err hidden" id="evTitleErr">Title is required</span>
+      </div>
+      <div class="field-group">
+        <label>Description</label>
+        <div class="input-wrap"><span class="input-icon">📄</span>
+          <textarea id="evDesc" placeholder="Optional detail..."></textarea></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field-group">
+          <label>Start date *</label>
+          <div class="input-wrap"><span class="input-icon">📅</span>
+            <input type="date" id="evStart" /></div>
+        </div>
+        <div class="field-group">
+          <label>End date *</label>
+          <div class="input-wrap"><span class="input-icon">⏰</span>
+            <input type="date" id="evEnd" /></div>
+        </div>
+      </div>
+      <span class="field-err hidden" id="evDateErr">End date must be on or after start date</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelEventBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveEventBtn">💾 Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APPLY LEAVE MODAL (any staff) ===== -->
+<div class="modal-overlay hidden" id="leaveModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title">🌴 Apply for Leave</span>
+      <button class="modal-close" id="closeLeaveModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field-group">
+          <label>Start date *</label>
+          <div class="input-wrap"><span class="input-icon">📅</span>
+            <input type="date" id="lvStart" /></div>
+        </div>
+        <div class="field-group">
+          <label>End date *</label>
+          <div class="input-wrap"><span class="input-icon">⏰</span>
+            <input type="date" id="lvEnd" /></div>
+        </div>
+      </div>
+      <span class="field-err hidden" id="lvDateErr">End date must be on or after start date</span>
+      <div class="field-group">
+        <label>Note (optional)</label>
+        <div class="input-wrap"><span class="input-icon">✍️</span>
+          <textarea id="lvNote" placeholder="Reason for leave, if you want to add one..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelLeaveBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveLeaveBtn">💾 Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REASON MODAL (reject leave) ===== -->
+<div class="modal-overlay hidden" id="reasonModal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title">❌ Reject Leave</span>
+      <button class="modal-close" id="closeReasonModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Reason *</label>
+        <div class="input-wrap"><span class="input-icon">✍️</span>
+          <textarea id="reasonText" placeholder="Tell the staff why it was rejected..."></textarea></div>
+        <span class="field-err hidden" id="reasonErr">A reason is required</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelReasonBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmReasonBtn">Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="system.js"></script>
+<script src="calendar.js"></script>
+</body>
+</html>

@@ -164,6 +164,9 @@ function renderSidebar(user, activePage) {
       <a href="inventory.html" class="nav-item ${activePage === 'inventory' ? 'active' : ''}">
         <span class="nav-item-icon">📦</span> Inventory
       </a>
+      <a href="calendar.html" class="nav-item ${activePage === 'calendar' ? 'active' : ''}">
+        <span class="nav-item-icon">📅</span> Calendar
+      </a>
       <div class="nav-section-label">Tools</div>
       <a href="status.html" class="nav-item" target="_blank">
         <span class="nav-item-icon">🔍</span> Status Checker
