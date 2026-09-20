@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbangPC – Staff Task</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="system.css" />
+</head>
+<body>
+
+<div class="system-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn-menu" id="menuBtn">☰</button>
+        <span class="topbar-title">Staff Task</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" id="addTaskBtn">➕ New Task</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- FILTERS -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="filters-row">
+          <div class="input-wrap" style="flex:1;max-width:280px;">
+            <span class="input-icon">🔍</span>
+            <input type="text" id="filterSearch" placeholder="Search task title..." />
+          </div>
+          <select id="filterAssignee" class="diag-select" style="max-width:200px;">
+            <option value="">All Assignees</option>
+          </select>
+          <select id="filterStatus" class="diag-select" style="max-width:200px;">
+            <option value="">All Statuses</option>
+            <option value="in_progress">In Progress</option>
+            <option value="awaiting_approval">Awaiting Approval</option>
+            <option value="awaiting_owner">Awaiting Owner</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+          </select>
+          <button class="status-tab" id="filterMine" data-on="false">⭐ Needs my action</button>
+        </div>
+      </div>
+
+      <!-- TASK LIST -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">✅ Tasks</span>
+          <span id="taskCount" style="font-size:13px;color:var(--muted);">Loading...</span>
+        </div>
+        <div id="taskList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== CREATE TASK MODAL ===== -->
+<div class="modal-overlay hidden" id="taskModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ New Task</span>
+      <button class="modal-close" id="closeTaskModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Title *</label>
+        <div class="input-wrap"><span class="input-icon">📝</span>
+          <input type="text" id="taskTitle" placeholder="e.g. Service the front counter PCs" /></div>
+        <span class="field-err hidden" id="taskTitleErr">Title is required</span>
+      </div>
+      <div class="field-group">
+        <label>Description</label>
+        <div class="input-wrap"><span class="input-icon">📄</span>
+          <textarea id="taskDesc" placeholder="What needs to be done..."></textarea></div>
+      </div>
+      <div class="field-group">
+        <label>Assign to (doer) *</label>
+        <select id="taskDoer" class="diag-select"></select>
+        <span class="field-err hidden" id="taskDoerErr">Choose a doer</span>
+      </div>
+      <div class="field-group">
+        <label>Approvers (pick any number; the doer is excluded)</label>
+        <div id="taskApprovers" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding:8px;border:1px solid var(--border);border-radius:10px;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field-group">
+          <label>Start date</label>
+          <div class="input-wrap"><span class="input-icon">📅</span>
+            <input type="date" id="taskStart" /></div>
+        </div>
+        <div class="field-group">
+          <label>End date (due)</label>
+          <div class="input-wrap"><span class="input-icon">⏰</span>
+            <input type="date" id="taskEnd" /></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelTaskBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveTaskBtn">💾 Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REASON MODAL (send back / reject) ===== -->
+<div class="modal-overlay hidden" id="reasonModal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title" id="reasonModalTitle">Reason</span>
+      <button class="modal-close" id="closeReasonModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label id="reasonLabel">Reason *</label>
+        <div class="input-wrap"><span class="input-icon">✍️</span>
+          <textarea id="reasonText" placeholder="Explain what needs fixing..."></textarea></div>
+        <span class="field-err hidden" id="reasonErr">A reason is required</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelReasonBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmReasonBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="system.js"></script>
+<script src="task.js"></script>
+</body>
+</html>
