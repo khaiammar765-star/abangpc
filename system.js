@@ -158,8 +158,8 @@ function renderSidebar(user, activePage) {
       <a href="dashboard.html" class="nav-item ${activePage === 'dashboard' ? 'active' : ''}">
         <span class="nav-item-icon">📊</span> Dashboard
       </a>
-      <a href="dashboard.html#create" class="nav-item">
-        <span class="nav-item-icon">➕</span> New Ticket
+      <a href="task.html" class="nav-item ${activePage === 'task' ? 'active' : ''}">
+        <span class="nav-item-icon">✅</span> Staff Task
       </a>
       <a href="inventory.html" class="nav-item ${activePage === 'inventory' ? 'active' : ''}">
         <span class="nav-item-icon">📦</span> Inventory
