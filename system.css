@@ -1136,6 +1136,11 @@ tbody tr:last-child { border-bottom: none; }
 }
 
 /* ==============================
+   FILTER ROW (dashboard, task)
+   ============================== */
+.filters-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+
+/* ==============================
    CALENDAR
    ============================== */
 .cal-toolbar { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
@@ -1154,6 +1159,9 @@ tbody tr:last-child { border-bottom: none; }
 .cal-chip.activity { background:rgba(96,165,250,0.15); color:#60A5FA; }
 .cal-chip.leave    { background:rgba(74,222,128,0.15); color:#4ADE80; }
 @media (max-width:768px) {
-  .cal-cell { min-height:64px; }
-  .cal-chip { font-size:10px; }
+  /* 7 columns leave each cell too narrow for chip text, so on phones each
+     entry becomes a small colored dot (the legend above explains the colours).
+     Full text is available on desktop. */
+  .cal-cell { min-height:56px; }
+  .cal-chip { font-size:0; padding:0; width:10px; height:10px; border-radius:50%; overflow:hidden; }
 }
