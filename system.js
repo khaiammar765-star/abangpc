@@ -158,11 +158,14 @@ function renderSidebar(user, activePage) {
       <a href="dashboard.html" class="nav-item ${activePage === 'dashboard' ? 'active' : ''}">
         <span class="nav-item-icon">📊</span> Dashboard
       </a>
-      <a href="dashboard.html#create" class="nav-item">
-        <span class="nav-item-icon">➕</span> New Ticket
+      <a href="task.html" class="nav-item ${activePage === 'task' ? 'active' : ''}">
+        <span class="nav-item-icon">✅</span> Staff Task
       </a>
       <a href="inventory.html" class="nav-item ${activePage === 'inventory' ? 'active' : ''}">
         <span class="nav-item-icon">📦</span> Inventory
+      </a>
+      <a href="calendar.html" class="nav-item ${activePage === 'calendar' ? 'active' : ''}">
+        <span class="nav-item-icon">📅</span> Calendar
       </a>
       <div class="nav-section-label">Tools</div>
       <a href="status.html" class="nav-item" target="_blank">
@@ -399,6 +402,19 @@ function parsePgInterval(interval) {
     return ms;
 }
 // =============================================
+// HTML ESCAPE
+// =============================================
+function escapeHtml(s) {
+    if (!s)
+        return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+// =============================================
 // MODAL HELPERS
 // =============================================
 function closeModal(id) {
@@ -457,5 +473,6 @@ const SystemApp = {
     getUserInitials,
     showToast,
     closeModal,
+    escapeHtml,
 };
 window.SystemApp = SystemApp;

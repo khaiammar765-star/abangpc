@@ -1134,3 +1134,34 @@ tbody tr:last-child { border-bottom: none; }
     margin: 0;
   }
 }
+
+/* ==============================
+   FILTER ROW (dashboard, task)
+   ============================== */
+.filters-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+
+/* ==============================
+   CALENDAR
+   ============================== */
+.cal-toolbar { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-dow { text-align:center; font-size:11px; font-weight:700; letter-spacing:0.06em;
+  text-transform:uppercase; color:var(--muted); padding:4px 0; }
+.cal-cell { min-height:92px; border:1px solid var(--border); border-radius:10px;
+  padding:6px; background:var(--card); display:flex; flex-direction:column; gap:4px; }
+.cal-cell.empty { background:transparent; border:none; }
+.cal-cell.today { border-color:var(--yellow); }
+.cal-daynum { font-size:12px; color:var(--muted); font-weight:600; }
+.cal-cell.today .cal-daynum { color:var(--yellow); }
+.cal-chip { font-size:11px; line-height:1.3; padding:2px 6px; border-radius:6px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-chip.closure  { background:rgba(239,68,68,0.15);  color:#EF4444; }
+.cal-chip.activity { background:rgba(96,165,250,0.15); color:#60A5FA; }
+.cal-chip.leave    { background:rgba(74,222,128,0.15); color:#4ADE80; }
+@media (max-width:768px) {
+  /* 7 columns leave each cell too narrow for chip text, so on phones each
+     entry becomes a small colored dot (the legend above explains the colours).
+     Full text is available on desktop. */
+  .cal-cell { min-height:56px; }
+  .cal-chip { font-size:0; padding:0; width:10px; height:10px; border-radius:50%; overflow:hidden; }
+}
