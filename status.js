@@ -88,10 +88,11 @@ async function checkStatus(ticketNumber) {
 // RENDER RESULT
 // =============================================
 function renderResult(ticket, container, diagnose, laptopDiagnose) {
-    const statusOrder = ['diagnosing', 'repairing', 'finished', 'ready_pickup', 'collected'];
+    const statusOrder = ['diagnosing', 'diagnose_finished', 'repairing', 'finished', 'ready_pickup', 'collected'];
     const currentIdx = statusOrder.indexOf(ticket.status);
     const stepLabels = {
         diagnosing: { icon: '🔍', label: 'Diagnosing' },
+        diagnose_finished: { icon: '📋', label: 'Diagnosed' },
         repairing: { icon: '🔧', label: 'Repairing' },
         finished: { icon: '✅', label: 'Finished' },
         ready_pickup: { icon: '📦', label: 'Ready' },
@@ -113,6 +114,17 @@ function renderResult(ticket, container, diagnose, laptopDiagnose) {
     const timeInStatus = ticket.time_in_current_status
         ? parseDuration(ticket.time_in_current_status)
         : '—';
+    // Special banner for diagnose_finished — ask the customer to confirm
+    const diagnoseFinishedBanner = ticket.status === 'diagnose_finished' ? `
+    <div class="alert alert-info" style="margin-top:16px;text-align:center;">
+      📋 <strong>Diagnosis complete!</strong><br>
+      Please let us know if you'd like to proceed with the repair.<br>
+      <a href="https://wa.me/60197707324?text=Hi%20AbangPC%2C%20my%20ticket%20${encodeURIComponent(ticket.ticket_number)}%20diagnosis%20is%20done.%20I'd%20like%20to%20discuss%20the%20next%20steps."
+        style="color:var(--info);font-weight:700;display:inline-block;margin-top:8px;">
+        💬 WhatsApp to Confirm
+      </a>
+    </div>
+  ` : '';
     // Special banner for ready_pickup
     const readyBanner = ticket.status === 'ready_pickup' ? `
     <div class="alert alert-success" style="margin-top:16px;text-align:center;">
@@ -181,6 +193,7 @@ function renderResult(ticket, container, diagnose, laptopDiagnose) {
       <div class="status-info-value" style="font-weight:400;font-size:14px;">${ticket.issue_description}</div>
     </div>
 
+    ${diagnoseFinishedBanner}
     ${readyBanner}
     ${collectedBanner}
 
@@ -236,6 +249,7 @@ function shareTicket(ticketNumber) {
 function getStatusLabel(status) {
     const labels = {
         diagnosing: '🔍 Diagnosing',
+        diagnose_finished: '📋 Finish Diagnosing',
         repairing: '🔧 Repairing',
         finished: '✅ Finished',
         ready_pickup: '📦 Ready for Pickup',

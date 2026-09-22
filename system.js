@@ -133,6 +133,7 @@ function formatDuration(dateStr) {
 function getStatusLabel(status) {
     const labels = {
         diagnosing: '🔍 Diagnosing',
+        diagnose_finished: '📋 Finish Diagnosing',
         repairing: '🔧 Repairing',
         finished: '✅ Finished',
         ready_pickup: '📦 Ready for Pickup',
