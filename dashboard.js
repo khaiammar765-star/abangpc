@@ -629,6 +629,10 @@ async function confirmStatusUpdate() {
         }
         closeModal('statusModal');
         await loadTickets();
+        // Refresh detail modal if open, so the new history entry shows straight away
+        if (!document.getElementById('detailModal').classList.contains('hidden')) {
+            openDetailModal(selectedTicketId);
+        }
         showToast('\u2705 Status updated!', 'success');
     }
     finally {
