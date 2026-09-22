@@ -807,7 +807,7 @@ async function exportToExcel() {
             return;
         }
         const statusLabels = {
-            diagnosing: 'Diagnosing', repairing: 'Repairing',
+            diagnosing: 'Diagnosing', diagnose_finished: 'Finish Diagnosing', repairing: 'Repairing',
             finished: 'Finished', ready_pickup: 'Ready for Pickup', collected: 'Collected'
         };
         // Build rows
