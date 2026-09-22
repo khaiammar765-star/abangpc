@@ -612,36 +612,28 @@ function openStatusModal(ticketId, currentStatus) {
 async function confirmStatusUpdate() {
     const newStatus = document.getElementById('newStatusSelect').value;
     const notes = document.getElementById('statusNotes').value.trim();
-    // Step 1: Update ticket status
-    const { error } = await db
-        .from('tickets')
-        .update({ status: newStatus })
-        .eq('id', selectedTicketId);
-    if (error) {
-        showToast('Failed to update status', 'error');
-        return;
-    }
-    // Step 2: Wait for trigger to fire, then save notes
-    if (notes) {
-        await new Promise((res) => setTimeout(res, 600));
-        const { data: historyRow } = await db
-            .from('ticket_status_history')
-            .select('id')
-            .eq('ticket_id', selectedTicketId)
-            .eq('status', newStatus)
-            .order('changed_at', { ascending: false })
-            .limit(1)
-            .single();
-        if (historyRow) {
-            await db
-                .from('ticket_status_history')
-                .update({ notes })
-                .eq('id', historyRow.id);
+    const btn = document.getElementById('confirmStatusBtn');
+    // Every click writes a history row, so block double-clicks while saving.
+    btn.disabled = true;
+    try {
+        // One call changes the status AND logs it (note + who did it), even
+        // when the status is the same. See update_ticket_status() in the DB.
+        const { error } = await db.rpc('update_ticket_status', {
+            p_ticket_id: selectedTicketId,
+            p_status: newStatus,
+            p_notes: notes,
+        });
+        if (error) {
+            showToast('Failed to update status', 'error');
+            return;
         }
+        closeModal('statusModal');
+        await loadTickets();
+        showToast('\u2705 Status updated!', 'success');
     }
-    closeModal('statusModal');
-    await loadTickets();
-    showToast('\u2705 Status updated!', 'success');
+    finally {
+        btn.disabled = false;
+    }
 }
 // =============================================
 // BIND EVENTS
