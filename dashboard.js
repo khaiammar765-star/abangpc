@@ -135,7 +135,7 @@ function populateYearFilter() {
 // =============================================
 function updateStats() {
     const counts = {
-        diagnosing: 0, repairing: 0,
+        diagnosing: 0, diagnose_finished: 0, repairing: 0,
         finished: 0, ready_pickup: 0, collected: 0
     };
     allTickets.forEach(t => { if (counts[t.status] !== undefined)
@@ -147,6 +147,7 @@ function updateStats() {
     };
     set('statTotal', allTickets.length);
     set('statDiagnosing', counts.diagnosing);
+    set('statDiagnoseFinished', counts.diagnose_finished);
     set('statRepairing', counts.repairing);
     set('statReady', counts.ready_pickup);
     set('statCollected', counts.collected);
