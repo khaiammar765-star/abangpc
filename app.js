@@ -99,7 +99,7 @@ function startCounters() {
     const years = document.getElementById('countYears');
     const time = document.getElementById('countTime');
     if (repairs)
-        animateCounter(repairs, 50000, '+');
+        animateCounter(repairs, 5000, '+');
     if (years)
         animateCounter(years, 5);
     if (time)
